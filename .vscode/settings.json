@@ -1,4 +1,11 @@
 {
+    "rust-analyzer.cargo.features": "all",
+    "rust-analyzer.check.features": "all",
+    "rust-analyzer.check.overrideCommand": [
+        "cargo",
+        "clippy",
+        "--message-format=json"
+    ],
     "workbench.colorCustomizations": {
         "activityBar.background": "#4C2200",
         "titleBar.activeBackground": "#6A2F00",
