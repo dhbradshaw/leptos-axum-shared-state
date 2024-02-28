@@ -16,7 +16,11 @@ async fn main() {
     let conf = get_configuration(None).await.unwrap();
     let leptos_options = conf.leptos_options;
     let addr = leptos_options.site_addr;
-    let state = AppState { leptos_options };
+    let database_url = std::env::var("DATABASE_URL").expect("DATABASE_URL must be set");
+    let db = sqlx::PgPool::connect(&database_url)
+        .await
+        .expect("Failed to connect to Postgres");
+    let state = AppState { leptos_options, db };
     let routes = generate_route_list(App);
 
     // build our application with a route
