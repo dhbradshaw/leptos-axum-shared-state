@@ -41,10 +41,49 @@ pub fn App() -> impl IntoView {
 fn HomePage() -> impl IntoView {
     // Creates a reactive value to update the button
     let (count, set_count) = create_signal(0);
+
+    // On click, increment the count
     let on_click = move |_| set_count.update(|count| *count += 1);
+
+    // Create a resource that will call the server function when the count changes
+    let resource = create_resource(count, |c| async move { axum_db_example(c).await });
+
+    // Create a closure that will be called when the resource is updated
+    // and returns a string including the value of the resource.
+    let resource_report = move || {
+        resource
+            .get()
+            .map(|value| format!("Server returned {value:?}"))
+            // This loading state will only show before the first load
+            .unwrap_or_else(|| "Loading...".into())
+    };
+
+    // Create a closure to track the loading state of the resource.
+    let is_loading = move || {
+        if resource.loading().get() {
+            "Loading..."
+        } else {
+            "Idle.."
+        }
+    };
 
     view! {
         <h1>"Welcome to Leptos!"</h1>
         <button on:click=on_click>"Click Me: " {count}</button>
+        <p>{resource_report}</p>
+        <p>{is_loading}</p>
     }
+}
+
+#[server]
+pub async fn axum_db_example(count: i32) -> Result<i32, ServerFnError> {
+    use crate::state::AppState;
+    use sqlx::Row;
+
+    let state: AppState = use_context::<AppState>().expect("Can't get app state from context");
+    let row = sqlx::query("SELECT 100 + $1")
+        .bind(count)
+        .fetch_one(&state.db)
+        .await?;
+    Ok(row.get(0))
 }
