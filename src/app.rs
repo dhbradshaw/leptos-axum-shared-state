@@ -46,7 +46,7 @@ fn HomePage() -> impl IntoView {
     let on_click = move |_| set_count.update(|count| *count += 1);
 
     // Create a resource that will call the server function when the count changes
-    let resource = create_resource(count, |c| async move { axum_db_example(c).await });
+    let resource = create_resource(count, |c| async move { db_add_100(c).await });
 
     // Create a closure that will be called when the resource is updated
     // and returns a string including the value of the resource.
@@ -55,12 +55,13 @@ fn HomePage() -> impl IntoView {
             .get()
             .map(|value| format!("Server returned {value:?}"))
             // This loading state will only show before the first load
-            .unwrap_or_else(|| "Loading...".into())
+            .unwrap_or_else(|| "No adding yet".into())
     };
 
     // Create a closure to track the loading state of the resource.
+    let loading = resource.loading();
     let is_loading = move || {
-        if resource.loading().get() {
+        if loading() {
             "Loading..."
         } else {
             "Idle.."
@@ -76,7 +77,7 @@ fn HomePage() -> impl IntoView {
 }
 
 #[server]
-pub async fn axum_db_example(count: i32) -> Result<i32, ServerFnError> {
+pub async fn db_add_100(count: i32) -> Result<i32, ServerFnError> {
     use crate::state::AppState;
     use sqlx::Row;
 
