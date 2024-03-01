@@ -50,12 +50,10 @@ fn HomePage() -> impl IntoView {
 
     // Create a closure that will be called when the resource is updated
     // and returns a string including the value of the resource.
-    let resource_report = move || {
-        resource
-            .get()
-            .map(|value| format!("Server returned {value:?}"))
-            // This loading state will only show before the first load
-            .unwrap_or_else(|| "No adding yet".into())
+    let resource_report = move || match resource.get() {
+        Some(Ok(value)) => format!("According to postgres, the count plus 100 is {value:?}."),
+        Some(Err(e)) => format!("Error fetching count plus 100: {e:?}"),
+        None => "No adding yet".into(),
     };
 
     // Create a closure to track the loading state of the resource.
